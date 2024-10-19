@@ -1,41 +1,55 @@
 import requests
 import json
 
+# Define a function to detect emotions from a given text
 def emotion_detector(text_to_analyze):
-    
-    # Define the URL for the Watson emotion prediction service
+
+    # Check if the text to analyze is empty or None
+    if not text_to_analyze or text_to_analyze.strip() == "":
+        # Return a dictionary with all emotions set to None
+        return {
+            'anger': None,
+            'disgust': None,
+            'fear': None,
+            'joy': None,
+            'sadness': None,
+            'dominant_emotion': None
+        }
+
+    # Define the URL and headers for the API request
     url = 'https://sn-watson-emotion.labs.skills.network/v1/watson.runtime.nlp.v1/NlpService/EmotionPredict'
-    # Define the headers for the request
     headers = {"grpc-metadata-mm-model-id": "emotion_aggregated-workflow_lang_en_stock"}
-    
-    
-    # Define the input data for the request
+
+    # Define the input data for the API request
     input_data = {"raw_document": {"text": text_to_analyze}}
-    
-    
-    # Send a POST request to the Watson emotion prediction service
+
+    # Make the API request
     response = requests.post(url, headers=headers, json=input_data)
-    
-    
-    # Load the response as a dictionary
+
+    # Check if the API request was successful
+    if response.status_code == 400:
+        # Return a dictionary with all emotions set to None
+        return {
+            'anger': None,
+            'disgust': None,
+            'fear': None,
+            'joy': None,
+            'sadness': None,
+            'dominant_emotion': None
+        }
+
+    # Parse the response from the API
     response_dict = json.loads(response.text)
-    
-    
+
     # Extract the emotion predictions from the response
     emotions = response_dict.get('emotion_predictions', [{}])[0]
-    # Extract the anger score from the emotion predictions
     anger = emotions.get('anger', 0)
-    # Extract the disgust score from the emotion predictions
     disgust = emotions.get('disgust', 0)
-    # Extract the fear score from the emotion predictions
     fear = emotions.get('fear', 0)
-    # Extract the joy score from the emotion predictions
     joy = emotions.get('joy', 0)
-    # Extract the sadness score from the emotion predictions
     sadness = emotions.get('sadness', 0)
-    
-    
-    # Create a dictionary of emotion scores
+
+    # Create a dictionary with the emotion scores
     emotion_scores = {
         'anger': anger,
         'disgust': disgust,
@@ -43,11 +57,10 @@ def emotion_detector(text_to_analyze):
         'joy': joy,
         'sadness': sadness
     }
-    # Determine the dominant emotion based on the emotion scores
+    # Find the dominant emotion
     dominant_emotion = max(emotion_scores, key=emotion_scores.get)
-    
-    
-    # Return a dictionary containing the emotion scores and the dominant emotion
+
+    # Return a dictionary with the emotion scores and the dominant emotion
     return {
         'anger': anger,
         'disgust': disgust,
@@ -57,9 +70,3 @@ def emotion_detector(text_to_analyze):
         'dominant_emotion': dominant_emotion
     }
 
-
-if __name__ == "__main__":
-    # Call the emotion_detector function with a sample text
-    result = emotion_detector("I am so happy I am doing this.")
-    # Print the result
-    print(result)
